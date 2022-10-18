@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart' show immutable;
+
+@immutable
 class Address {
-  Address({
+  const Address({
     this.zipcode,
     this.street,
     this.housenumber,

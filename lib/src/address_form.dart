@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_address_form/src/address_controller.dart';
 import 'package:flutter_address_form/src/models/address.dart';
 
 class AddressForm extends StatefulWidget {
@@ -9,19 +11,22 @@ class AddressForm extends StatefulWidget {
 }
 
 class _AddressFormState extends State<AddressForm> {
-  final TextEditingController _zipcodeController = TextEditingController();
-  final TextEditingController _houseNumberController = TextEditingController();
-  final TextEditingController _prefixController = TextEditingController();
-  final TextEditingController _streetController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
+  final AddressController _addressController = AddressController(() {});
 
   final RegExp _zipcodeRegExp = RegExp(r'^[1-9][0-9]{3}\s?[a-zA-Z]{2}$');
+
+  @override
+  void initState() {
+    _addressController;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         AddressFormTextField(
-          controller: _zipcodeController,
+          controller: _addressController.zipcode,
           validator: (text) {
             if (text.isEmpty) {
               return 'Can\'t be empty';
@@ -31,13 +36,13 @@ class _AddressFormState extends State<AddressForm> {
             }
             return null;
           },
-          label: 'Postcode',
+          label: const Text('Postcode'),
         ),
         Flexible(
           child: Row(
             children: [
               AddressFormTextField(
-                controller: _houseNumberController,
+                controller: _addressController.houseNumber,
                 validator: (text) {
                   if (text.isEmpty) {
                     return 'Can\'t be empty';
@@ -47,10 +52,10 @@ class _AddressFormState extends State<AddressForm> {
                   }
                   return null;
                 },
-                label: 'Huisnummer',
+                label: const Text('Huisnummer'),
               ),
               AddressFormTextField(
-                controller: _prefixController,
+                controller: _addressController.suffix,
                 validator: (text) {
                   if (text.isEmpty) {
                     return 'Can\'t be empty';
@@ -61,30 +66,30 @@ class _AddressFormState extends State<AddressForm> {
                   }
                   return null;
                 },
-                label: 'Toevoeging',
+                label: const Text('Toevoeging'),
               ),
             ],
           ),
         ),
         AddressFormTextField(
-          controller: _streetController,
+          controller: _addressController.street,
           validator: (text) {
             if (text.isEmpty) {
               return 'Can\'t be empty';
             }
             return null;
           },
-          label: 'Straatnaam',
+          label: const Text('Straatnaam'),
         ),
         AddressFormTextField(
-          controller: _cityController,
+          controller: _addressController.city,
           validator: (text) {
             if (text.isEmpty) {
               return 'Can\'t be empty';
             }
             return null;
           },
-          label: 'Woonplaats',
+          label: const Text('Woonplaats'),
         ),
         TextButton(
           onPressed: () {},
@@ -96,20 +101,15 @@ class _AddressFormState extends State<AddressForm> {
 
   @override
   void dispose() {
-    _zipcodeController.dispose();
-    _houseNumberController.dispose();
-    _prefixController.dispose();
-    _streetController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 }
 
 class AddressFormTextField extends StatefulWidget {
-  final String label;
+  final Widget label;
   final TextEditingController controller;
   final String? Function(String) validator;
-  AddressFormTextField({
+  const AddressFormTextField({
     Key? key,
     required this.label,
     required this.controller,
@@ -121,8 +121,6 @@ class AddressFormTextField extends StatefulWidget {
 }
 
 class _AddressFormTextFieldState extends State<AddressFormTextField> {
-  final Address addressModel = Address();
-
   String? get _errorText {
     final text = widget.controller.value.text;
     return widget.validator(text);
@@ -144,7 +142,7 @@ class _AddressFormTextFieldState extends State<AddressFormTextField> {
               child: TextField(
                 controller: widget.controller,
                 decoration: InputDecoration(
-                    label: Text(widget.label),
+                    label: widget.label,
                     border: const OutlineInputBorder(),
                     errorText: _errorText),
               ),
