@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_address_form/src/models/address_model.dart';
 
+/// A widget that creates a form with different address fields widgets.
+/// Returns a `AddressModel` Object from a `AddressController`.
 class AddressForm extends StatelessWidget {
   AddressForm({
     Key? key,
@@ -35,6 +37,7 @@ class AddressForm extends StatelessWidget {
   final String? Function(String) streetValidator;
   final String? Function(String) cityValidator;
 
+  /// Controls the `AddressModel`
   late final AddressController _addressController;
 
   @override
@@ -112,7 +115,10 @@ class AddressFormTextField extends StatelessWidget {
 }
 
 class AddressController extends ChangeNotifier {
+  /// An optional value to initialize the form field to, or null otherwise.
   final AddressModel? initialValue;
+
+  /// When the form changes, the function passes the current `AddressModel` as an argument and gives the possibility to manipulate and return a `AddressModel`.
   final FutureOr<AddressModel> Function(AddressModel)? onAutoComplete;
 
   AddressController({this.initialValue, this.onAutoComplete}) {
@@ -139,7 +145,7 @@ class AddressController extends ChangeNotifier {
   late final _streetController =
       TextEditingController(text: initialValue?.street);
   late final _housenumberController =
-      TextEditingController(text: initialValue?.housenumber.toString());
+      TextEditingController(text: initialValue?.housenumber);
   late final _suffixController =
       TextEditingController(text: initialValue?.suffix);
   late final _cityController = TextEditingController(text: initialValue?.city);
@@ -150,7 +156,7 @@ class AddressController extends ChangeNotifier {
     AddressModel updatedModel = _model.copyWith(
         zipcode: _zipcodeController.text,
         street: _streetController.text,
-        housenumber: int.tryParse(_housenumberController.text),
+        housenumber: _housenumberController.text,
         suffix: _suffixController.text,
         city: _cityController.text);
     _model = await onAutoComplete?.call(updatedModel) ?? updatedModel;
@@ -162,7 +168,7 @@ class AddressController extends ChangeNotifier {
       _streetController.text = _model.street ?? '';
     }
     if (_model.housenumber != updatedModel.housenumber) {
-      _housenumberController.text = _model.housenumber?.toString() ?? '';
+      _housenumberController.text = _model.housenumber ?? '';
     }
     if (_model.suffix != updatedModel.suffix) {
       _suffixController.text = _model.suffix ?? '';

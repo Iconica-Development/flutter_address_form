@@ -12,14 +12,14 @@ class AddressModel {
 
   final String? zipcode;
   final String? street;
-  final int? housenumber;
+  final String? housenumber;
   final String? suffix;
   final String? city;
 
   AddressModel copyWith({
     String? zipcode,
     String? street,
-    int? housenumber,
+    String? housenumber,
     String? suffix,
     String? city,
   }) =>
