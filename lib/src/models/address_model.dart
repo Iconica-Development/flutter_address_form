@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart' show immutable;
 
 @immutable
-class Address {
-  const Address({
+class AddressModel {
+  const AddressModel({
     this.zipcode,
     this.street,
     this.housenumber,
@@ -16,14 +16,14 @@ class Address {
   final String? suffix;
   final String? city;
 
-  Address copyWith({
+  AddressModel copyWith({
     String? zipcode,
     String? street,
     int? housenumber,
     String? suffix,
     String? city,
   }) =>
-      Address(
+      AddressModel(
         zipcode: zipcode ?? this.zipcode,
         street: street ?? this.street,
         housenumber: housenumber ?? this.housenumber,

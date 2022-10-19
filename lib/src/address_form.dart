@@ -1,111 +1,83 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_address_form/src/address_controller.dart';
-import 'package:flutter_address_form/src/models/address.dart';
 
-class AddressForm extends StatefulWidget {
-  const AddressForm({Key? key}) : super(key: key);
+import 'package:flutter_address_form/src/models/address_model.dart';
 
-  @override
-  State<AddressForm> createState() => _AddressFormState();
-}
-
-class _AddressFormState extends State<AddressForm> {
-  final AddressController _addressController = AddressController(() {});
-
-  final RegExp _zipcodeRegExp = RegExp(r'^[1-9][0-9]{3}\s?[a-zA-Z]{2}$');
-
-  @override
-  void initState() {
-    _addressController;
-    super.initState();
+class AddressForm extends StatelessWidget {
+  AddressForm({
+    Key? key,
+    this.zipCodeLabel = const Text('Zipcode'),
+    this.housenumberLabel = const Text('Housenumber'),
+    this.suffixLabel = const Text('Suffix'),
+    this.streetLabel = const Text('Street'),
+    this.cityLabel = const Text('City'),
+    required this.zipCodeValidator,
+    required this.housenumberValidator,
+    required this.suffixValidator,
+    required this.streetValidator,
+    required this.cityValidator,
+    AddressController? controller,
+  }) {
+    _addressController =
+        controller ?? AddressController(onAutoComplete: (model) => model);
   }
+
+  final Widget zipCodeLabel;
+  final Widget housenumberLabel;
+  final Widget suffixLabel;
+  final Widget streetLabel;
+  final Widget cityLabel;
+
+  final String? Function(String) zipCodeValidator;
+  final String? Function(String) housenumberValidator;
+  final String? Function(String) suffixValidator;
+  final String? Function(String) streetValidator;
+  final String? Function(String) cityValidator;
+
+  late final AddressController _addressController;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         AddressFormTextField(
-          controller: _addressController.zipcode,
-          validator: (text) {
-            if (text.isEmpty) {
-              return 'Can\'t be empty';
-            }
-            if (!_zipcodeRegExp.hasMatch(text)) {
-              return 'Invalid zipcode';
-            }
-            return null;
-          },
-          label: const Text('Postcode'),
+          controller: _addressController._zipcodeController,
+          validator: zipCodeValidator,
+          label: zipCodeLabel,
         ),
         Flexible(
           child: Row(
             children: [
               AddressFormTextField(
-                controller: _addressController.houseNumber,
-                validator: (text) {
-                  if (text.isEmpty) {
-                    return 'Can\'t be empty';
-                  }
-                  if (text.length >= 3 || int.tryParse(text) == null) {
-                    return 'Invalid number';
-                  }
-                  return null;
-                },
-                label: const Text('Huisnummer'),
+                controller: _addressController._housenumberController,
+                validator: housenumberValidator,
+                label: housenumberLabel,
               ),
               AddressFormTextField(
-                controller: _addressController.suffix,
-                validator: (text) {
-                  if (text.isEmpty) {
-                    return 'Can\'t be empty';
-                  }
-                  if (RegExp(r'/^[a-z]*$/').hasMatch(text) &&
-                      text.length != 1) {
-                    return 'Invalid prefix';
-                  }
-                  return null;
-                },
-                label: const Text('Toevoeging'),
+                controller: _addressController._suffixController,
+                validator: suffixValidator,
+                label: suffixLabel,
               ),
             ],
           ),
         ),
         AddressFormTextField(
-          controller: _addressController.street,
-          validator: (text) {
-            if (text.isEmpty) {
-              return 'Can\'t be empty';
-            }
-            return null;
-          },
-          label: const Text('Straatnaam'),
+          controller: _addressController._streetController,
+          validator: streetValidator,
+          label: streetLabel,
         ),
         AddressFormTextField(
-          controller: _addressController.city,
-          validator: (text) {
-            if (text.isEmpty) {
-              return 'Can\'t be empty';
-            }
-            return null;
-          },
-          label: const Text('Woonplaats'),
+          controller: _addressController._cityController,
+          validator: cityValidator,
+          label: cityLabel,
         ),
-        TextButton(
-          onPressed: () {},
-          child: Text('Test'),
-        )
       ],
     );
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }
 
-class AddressFormTextField extends StatefulWidget {
+class AddressFormTextField extends StatelessWidget {
   final Widget label;
   final TextEditingController controller;
   final String? Function(String) validator;
@@ -116,38 +88,99 @@ class AddressFormTextField extends StatefulWidget {
     required this.validator,
   }) : super(key: key);
 
-  @override
-  State<AddressFormTextField> createState() => _AddressFormTextFieldState();
-}
-
-class _AddressFormTextFieldState extends State<AddressFormTextField> {
-  String? get _errorText {
-    final text = widget.controller.value.text;
-    return widget.validator(text);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  String? get _errorText => validator(controller.value.text);
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TextEditingValue>(
-        valueListenable: widget.controller,
+        valueListenable: controller,
         builder: (context, value, _) {
           return Flexible(
             child: Container(
               margin: const EdgeInsets.all(10),
               child: TextField(
-                controller: widget.controller,
+                controller: controller,
                 decoration: InputDecoration(
-                    label: widget.label,
+                    label: label,
                     border: const OutlineInputBorder(),
                     errorText: _errorText),
               ),
             ),
           );
         });
+  }
+}
+
+class AddressController extends ChangeNotifier {
+  final AddressModel? initialValue;
+  final FutureOr<AddressModel> Function(AddressModel)? onAutoComplete;
+
+  AddressController({this.initialValue, this.onAutoComplete}) {
+    _model = initialValue ??
+        const AddressModel(
+          zipcode: null,
+          street: null,
+          housenumber: null,
+          suffix: null,
+          city: null,
+        );
+
+    _zipcodeController.addListener(_update);
+    _streetController.addListener(_update);
+    _housenumberController.addListener(_update);
+    _suffixController.addListener(_update);
+    _cityController.addListener(_update);
+  }
+
+  late AddressModel _model;
+
+  late final _zipcodeController =
+      TextEditingController(text: initialValue?.zipcode);
+  late final _streetController =
+      TextEditingController(text: initialValue?.street);
+  late final _housenumberController =
+      TextEditingController(text: initialValue?.housenumber.toString());
+  late final _suffixController =
+      TextEditingController(text: initialValue?.suffix);
+  late final _cityController = TextEditingController(text: initialValue?.city);
+
+  AddressModel get model => _model;
+
+  void _update() async {
+    AddressModel updatedModel = _model.copyWith(
+        zipcode: _zipcodeController.text,
+        street: _streetController.text,
+        housenumber: int.tryParse(_housenumberController.text),
+        suffix: _suffixController.text,
+        city: _cityController.text);
+    _model = await onAutoComplete?.call(updatedModel) ?? updatedModel;
+
+    if (_model.zipcode != updatedModel.zipcode) {
+      _zipcodeController.text = _model.zipcode ?? '';
+    }
+    if (_model.street != updatedModel.street) {
+      _streetController.text = _model.street ?? '';
+    }
+    if (_model.housenumber != updatedModel.housenumber) {
+      _housenumberController.text = _model.housenumber?.toString() ?? '';
+    }
+    if (_model.suffix != updatedModel.suffix) {
+      _suffixController.text = _model.suffix ?? '';
+    }
+    if (_model.city != updatedModel.city) {
+      _cityController.text = _model.city ?? '';
+    }
+
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _zipcodeController.dispose();
+    _streetController.dispose();
+    _housenumberController.dispose();
+    _suffixController.dispose();
+    _cityController.dispose();
   }
 }
