@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 
@@ -48,58 +47,68 @@ class AddressForm extends StatefulWidget {
 class _AddressFormState extends State<AddressForm> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AddressFormTextField(
-          controller: widget._addressController._zipcodeController,
-          fieldDecoration: widget.zipCodeDecoration,
-        ),
-        Flexible(
-          child: Row(
-            children: [
-              AddressFormTextField(
-                controller: widget._addressController._housenumberController,
-                fieldDecoration: widget.housenumberDecoration,
-              ),
-              AddressFormTextField(
-                controller: widget._addressController._suffixController,
-                fieldDecoration: widget.suffixDecoration,
-              ),
-            ],
+    return Flexible(
+      child: Column(
+        children: [
+          AddressFormTextField(
+            validator: widget._addressController.zipCodeValidator,
+            controller: widget._addressController._zipcodeController,
+            fieldDecoration: widget.zipCodeDecoration,
           ),
-        ),
-        AddressFormTextField(
-          controller: widget._addressController._streetController,
-          fieldDecoration: widget.streetDecoration,
-        ),
-        AddressFormTextField(
-          controller: widget._addressController._cityController,
-          fieldDecoration: widget.cityDecoration,
-        ),
-      ],
+          Flexible(
+            child: Row(
+              children: [
+                AddressFormTextField(
+                  validator: widget._addressController.housenumberValidator,
+                  controller: widget._addressController._housenumberController,
+                  fieldDecoration: widget.housenumberDecoration,
+                ),
+                AddressFormTextField(
+                  validator: widget._addressController.suffixValidator,
+                  controller: widget._addressController._suffixController,
+                  fieldDecoration: widget.suffixDecoration,
+                ),
+              ],
+            ),
+          ),
+          AddressFormTextField(
+            validator: widget._addressController.streetValidator,
+            controller: widget._addressController._streetController,
+            fieldDecoration: widget.streetDecoration,
+          ),
+          AddressFormTextField(
+            validator: widget._addressController.cityValidator,
+            controller: widget._addressController._cityController,
+            fieldDecoration: widget.cityDecoration,
+          ),
+        ],
+      ),
     );
   }
 }
 
 class AddressFormTextField extends StatelessWidget {
-  AddressFormTextField({
-    super.key,
-    required this.fieldDecoration,
-    required this.controller,
-  }) {
-    _addressFieldDecoration = fieldDecoration;
-  }
+  AddressFormTextField(
+      {super.key,
+      required this.fieldDecoration,
+      required this.controller,
+      required this.validator});
 
   final TextEditingController controller;
   final InputDecoration fieldDecoration;
+  final String? Function(String) validator;
 
-  late final InputDecoration _addressFieldDecoration;
+  late InputDecoration _addressFieldDecoration;
+
+  String? get _errorText => validator(controller.value.text);
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
+        _addressFieldDecoration =
+            fieldDecoration.copyWith(errorText: _errorText);
         return Flexible(
           child: Container(
             margin: const EdgeInsets.all(10),
@@ -165,9 +174,7 @@ class AddressController extends ChangeNotifier {
 
   AddressModel get model => _model;
 
-  bool get validate => _validate();
-
-  bool _validate() {
+  bool validate() {
     if (zipCodeValidator.call(_zipcodeController.text) == null &&
         streetValidator.call(_streetController.text) == null &&
         housenumberValidator.call(_housenumberController.text) == null &&

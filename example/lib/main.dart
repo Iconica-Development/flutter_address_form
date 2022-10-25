@@ -86,10 +86,11 @@ class AddressFormExample extends StatelessWidget {
           AddressForm(
               onSubmit: (value) => value, controller: _addressController),
           TextButton(
-              onPressed: () {
-                _addressController.validate;
-              },
-              child: Text('Test'))
+            onPressed: () {
+              _addressController.validate();
+            },
+            child: Text('Test'),
+          )
         ],
       ),
     );
