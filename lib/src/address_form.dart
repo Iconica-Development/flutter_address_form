@@ -47,7 +47,8 @@ class AddressForm extends StatefulWidget {
 class _AddressFormState extends State<AddressForm> {
   @override
   Widget build(BuildContext context) {
-    return Flexible(
+    return Form(
+      key: widget._addressController._formKey,
       child: Column(
         children: [
           AddressFormTextField(
@@ -55,21 +56,23 @@ class _AddressFormState extends State<AddressForm> {
             controller: widget._addressController._zipcodeController,
             fieldDecoration: widget.zipCodeDecoration,
           ),
-          Flexible(
-            child: Row(
-              children: [
-                AddressFormTextField(
+          Row(
+            children: [
+              Expanded(
+                child: AddressFormTextField(
                   validator: widget._addressController.housenumberValidator,
                   controller: widget._addressController._housenumberController,
                   fieldDecoration: widget.housenumberDecoration,
                 ),
-                AddressFormTextField(
+              ),
+              Expanded(
+                child: AddressFormTextField(
                   validator: widget._addressController.suffixValidator,
                   controller: widget._addressController._suffixController,
                   fieldDecoration: widget.suffixDecoration,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           AddressFormTextField(
             validator: widget._addressController.streetValidator,
@@ -88,37 +91,26 @@ class _AddressFormState extends State<AddressForm> {
 }
 
 class AddressFormTextField extends StatelessWidget {
-  AddressFormTextField(
-      {super.key,
-      required this.fieldDecoration,
-      required this.controller,
-      required this.validator});
+  const AddressFormTextField({
+    super.key,
+    required this.fieldDecoration,
+    required this.controller,
+    this.validator,
+  });
 
   final TextEditingController controller;
   final InputDecoration fieldDecoration;
-  final String? Function(String) validator;
-
-  late InputDecoration _addressFieldDecoration;
-
-  String? get _errorText => validator(controller.value.text);
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        _addressFieldDecoration =
-            fieldDecoration.copyWith(errorText: _errorText);
-        return Flexible(
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            child: TextField(
-              controller: controller,
-              decoration: _addressFieldDecoration,
-            ),
-          ),
-        );
-      },
+    return Container(
+      margin: const EdgeInsets.all(10),
+      child: TextFormField(
+        controller: controller,
+        decoration: fieldDecoration,
+        validator: validator,
+      ),
     );
   }
 }
@@ -127,17 +119,19 @@ class AddressController extends ChangeNotifier {
   /// An optional value to initialize the form field to, or null otherwise.
   final AddressModel? initialValue;
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   /// When the form changes, the function passes the current `AddressModel` as an argument and gives the possibility to manipulate and return a `AddressModel`.
   final FutureOr<AddressModel> Function(AddressModel)? onAutoComplete;
 
   AddressController(
       {this.initialValue,
       this.onAutoComplete,
-      required this.zipCodeValidator,
-      required this.housenumberValidator,
-      required this.suffixValidator,
-      required this.streetValidator,
-      required this.cityValidator}) {
+      this.zipCodeValidator,
+      this.housenumberValidator,
+      this.suffixValidator,
+      this.streetValidator,
+      this.cityValidator}) {
     _model = initialValue ??
         const AddressModel(
           zipcode: null,
@@ -156,11 +150,11 @@ class AddressController extends ChangeNotifier {
 
   late AddressModel _model;
 
-  final String? Function(String) zipCodeValidator;
-  final String? Function(String) housenumberValidator;
-  final String? Function(String) suffixValidator;
-  final String? Function(String) streetValidator;
-  final String? Function(String) cityValidator;
+  final String? Function(String?)? zipCodeValidator;
+  final String? Function(String?)? housenumberValidator;
+  final String? Function(String?)? suffixValidator;
+  final String? Function(String?)? streetValidator;
+  final String? Function(String?)? cityValidator;
 
   late final _zipcodeController =
       TextEditingController(text: initialValue?.zipcode);
@@ -175,15 +169,7 @@ class AddressController extends ChangeNotifier {
   AddressModel get model => _model;
 
   bool validate() {
-    if (zipCodeValidator.call(_zipcodeController.text) == null &&
-        streetValidator.call(_streetController.text) == null &&
-        housenumberValidator.call(_housenumberController.text) == null &&
-        suffixValidator.call(_suffixController.text) == null &&
-        cityValidator.call(_cityController.text) == null) {
-      return true;
-    } else {
-      return false;
-    }
+    return _formKey.currentState!.validate();
   }
 
   void _update() async {

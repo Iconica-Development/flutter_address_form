@@ -37,59 +37,73 @@ class AddressFormExample extends StatelessWidget {
 
   final _addressController = AddressController(
     zipCodeValidator: (text) {
-      if (text.isEmpty) {
-        return 'Can\'t be empty';
-      }
-      if (!RegExp(r'^[1-9][0-9]{3}\s?[a-zA-Z]{2}$').hasMatch(text)) {
-        return 'Invalid zipcode';
+      if (text != null) {
+        if (text.isEmpty) {
+          return 'Can\'t be empty';
+        }
+        if (!RegExp(r'^[1-9][0-9]{3}\s?[a-zA-Z]{2}$').hasMatch(text)) {
+          return 'Invalid zipcode';
+        }
       }
       return null;
     },
     housenumberValidator: (text) {
-      if (text.isEmpty) {
-        return 'Can\'t be empty';
-      }
-      if (text.length >= 3 || int.tryParse(text) == null) {
-        return 'Invalid number';
+      if (text != null) {
+        if (text.isEmpty) {
+          return 'Can\'t be empty';
+        }
+        if (text.length >= 3 || int.tryParse(text) == null) {
+          return 'Invalid number';
+        }
       }
       return null;
     },
     suffixValidator: (text) {
-      if (text.isNotEmpty && RegExp(r'/^[a-z]*$/').hasMatch(text)) {
-        return 'Invalid prefix';
+      if (text != null) {
+        if (text.isNotEmpty && RegExp(r'/^[a-z]*$/').hasMatch(text)) {
+          return 'Invalid prefix';
+        }
       }
       return null;
     },
     streetValidator: (text) {
-      if (text.isEmpty) {
-        return 'Can\'t be empty';
+      if (text != null) {
+        if (text.isEmpty) {
+          return 'Can\'t be empty';
+        }
+      }
+      return null;
+    },
+    cityValidator: (text) {
+      if (text != null) {
+        if (text.isEmpty) {
+          return 'Can\'t be empty';
+        }
       }
       return null;
     },
     onAutoComplete: (address) {
       return address;
     },
-    cityValidator: (text) {
-      if (text.isEmpty) {
-        return 'Can\'t be empty';
-      }
-      return null;
-    },
   );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text('Address Form'),
+      ),
       body: Column(
         children: [
           AddressForm(
-              onSubmit: (value) => value, controller: _addressController),
-          TextButton(
+            onSubmit: (value) => value,
+            controller: _addressController,
+          ),
+          ElevatedButton(
             onPressed: () {
               _addressController.validate();
             },
-            child: Text('Test'),
+            child: const Text('Validate'),
           )
         ],
       ),
