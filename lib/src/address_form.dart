@@ -169,6 +169,8 @@ class AddressController extends ChangeNotifier {
   AddressModel get model => _model;
 
   bool validate() {
+    assert(_formKey.currentState != null,
+        'Validation can only be used if a FormKey is attached to the current Form');
     return _formKey.currentState!.validate();
   }
 
