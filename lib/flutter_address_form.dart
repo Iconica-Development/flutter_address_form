@@ -1,7 +1,4 @@
 library flutter_address_form;
 
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+export 'src/address_form.dart';
+export 'src/models/address_model.dart';
