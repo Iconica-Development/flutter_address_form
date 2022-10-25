@@ -11,45 +11,48 @@ void main() {
         home: Scaffold(
           appBar: AppBar(),
           body: AddressForm(
-            zipCodeValidator: (text) {
-              if (text.isEmpty) {
-                return 'Can\'t be empty';
-              }
-              if (!zipcodeRegExp.hasMatch(text)) {
-                return 'Invalid zipcode';
-              }
-              return null;
-            },
-            housenumberValidator: (text) {
-              if (text.isEmpty) {
-                return 'Can\'t be empty';
-              }
-              if (text.length >= 3 || int.tryParse(text) == null) {
-                return 'Invalid number';
-              }
-              return null;
-            },
-            suffixValidator: (text) {
-              if (text.isNotEmpty && RegExp(r'/^[a-z]*$/').hasMatch(text)) {
-                return 'Invalid prefix';
-              }
-              return null;
-            },
-            streetValidator: (text) {
-              if (text.isEmpty) {
-                return 'Can\'t be empty';
-              }
-              return null;
-            },
-            cityValidator: (text) {
-              if (text.isEmpty) {
-                return 'Can\'t be empty';
-              }
-              return null;
-            },
-            controller: AddressController(onAutoComplete: (address) {
-              return address;
-            }),
+            onSubmit: (value) => value,
+            controller: AddressController(
+              zipCodeValidator: (text) {
+                if (text.isEmpty) {
+                  return 'Can\'t be empty';
+                }
+                if (!zipcodeRegExp.hasMatch(text)) {
+                  return 'Invalid zipcode';
+                }
+                return null;
+              },
+              housenumberValidator: (text) {
+                if (text.isEmpty) {
+                  return 'Can\'t be empty';
+                }
+                if (text.length >= 3 || int.tryParse(text) == null) {
+                  return 'Invalid number';
+                }
+                return null;
+              },
+              suffixValidator: (text) {
+                if (text.isNotEmpty && RegExp(r'/^[a-z]*$/').hasMatch(text)) {
+                  return 'Invalid prefix';
+                }
+                return null;
+              },
+              streetValidator: (text) {
+                if (text.isEmpty) {
+                  return 'Can\'t be empty';
+                }
+                return null;
+              },
+              onAutoComplete: (address) {
+                return address;
+              },
+              cityValidator: (text) {
+                if (text.isEmpty) {
+                  return 'Can\'t be empty';
+                }
+                return null;
+              },
+            ),
           ),
         ),
       ),

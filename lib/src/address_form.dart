@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 
@@ -6,74 +7,74 @@ import 'package:flutter_address_form/src/models/address_model.dart';
 
 /// A widget that creates a form with different address fields widgets.
 /// Returns a `AddressModel` Object from a `AddressController`.
-class AddressForm extends StatelessWidget {
+class AddressForm extends StatefulWidget {
   AddressForm({
-    Key? key,
-    this.zipCodeLabel = const Text('Zipcode'),
-    this.housenumberLabel = const Text('Housenumber'),
-    this.suffixLabel = const Text('Suffix'),
-    this.streetLabel = const Text('Street'),
-    this.cityLabel = const Text('City'),
-    required this.zipCodeValidator,
-    required this.housenumberValidator,
-    required this.suffixValidator,
-    required this.streetValidator,
-    required this.cityValidator,
+    super.key,
     AddressController? controller,
+    this.zipCodeDecoration = const InputDecoration(label: Text('Zipcode')),
+    this.housenumberDecoration =
+        const InputDecoration(label: Text('Housenumber')),
+    this.suffixDecoration = const InputDecoration(label: Text('Suffix')),
+    this.streetDecoration = const InputDecoration(label: Text('Street')),
+    this.cityDecoration = const InputDecoration(label: Text('City')),
+    required this.onSubmit,
   }) {
-    _addressController =
-        controller ?? AddressController(onAutoComplete: (model) => model);
+    _addressController = controller ??
+        AddressController(
+          onAutoComplete: (model) => model,
+          zipCodeValidator: (text) => null,
+          cityValidator: (text) => null,
+          housenumberValidator: (text) => null,
+          streetValidator: (text) => null,
+          suffixValidator: (text) => null,
+        );
   }
 
-  final Widget zipCodeLabel;
-  final Widget housenumberLabel;
-  final Widget suffixLabel;
-  final Widget streetLabel;
-  final Widget cityLabel;
+  final InputDecoration zipCodeDecoration;
+  final InputDecoration housenumberDecoration;
+  final InputDecoration suffixDecoration;
+  final InputDecoration streetDecoration;
+  final InputDecoration cityDecoration;
 
-  final String? Function(String) zipCodeValidator;
-  final String? Function(String) housenumberValidator;
-  final String? Function(String) suffixValidator;
-  final String? Function(String) streetValidator;
-  final String? Function(String) cityValidator;
+  final ValueChanged<String> onSubmit;
 
   /// Controls the `AddressModel`
   late final AddressController _addressController;
 
   @override
+  State<AddressForm> createState() => _AddressFormState();
+}
+
+class _AddressFormState extends State<AddressForm> {
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         AddressFormTextField(
-          controller: _addressController._zipcodeController,
-          validator: zipCodeValidator,
-          label: zipCodeLabel,
+          controller: widget._addressController._zipcodeController,
+          fieldDecoration: widget.zipCodeDecoration,
         ),
         Flexible(
           child: Row(
             children: [
               AddressFormTextField(
-                controller: _addressController._housenumberController,
-                validator: housenumberValidator,
-                label: housenumberLabel,
+                controller: widget._addressController._housenumberController,
+                fieldDecoration: widget.housenumberDecoration,
               ),
               AddressFormTextField(
-                controller: _addressController._suffixController,
-                validator: suffixValidator,
-                label: suffixLabel,
+                controller: widget._addressController._suffixController,
+                fieldDecoration: widget.suffixDecoration,
               ),
             ],
           ),
         ),
         AddressFormTextField(
-          controller: _addressController._streetController,
-          validator: streetValidator,
-          label: streetLabel,
+          controller: widget._addressController._streetController,
+          fieldDecoration: widget.streetDecoration,
         ),
         AddressFormTextField(
-          controller: _addressController._cityController,
-          validator: cityValidator,
-          label: cityLabel,
+          controller: widget._addressController._cityController,
+          fieldDecoration: widget.cityDecoration,
         ),
       ],
     );
@@ -81,36 +82,35 @@ class AddressForm extends StatelessWidget {
 }
 
 class AddressFormTextField extends StatelessWidget {
-  final Widget label;
-  final TextEditingController controller;
-  final String? Function(String) validator;
-  const AddressFormTextField({
-    Key? key,
-    required this.label,
+  AddressFormTextField({
+    super.key,
+    required this.fieldDecoration,
     required this.controller,
-    required this.validator,
-  }) : super(key: key);
+  }) {
+    _addressFieldDecoration = fieldDecoration;
+  }
 
-  String? get _errorText => validator(controller.value.text);
+  final TextEditingController controller;
+  final InputDecoration fieldDecoration;
+
+  late final InputDecoration _addressFieldDecoration;
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TextEditingValue>(
-        valueListenable: controller,
-        builder: (context, value, _) {
-          return Flexible(
-            child: Container(
-              margin: const EdgeInsets.all(10),
-              child: TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                    label: label,
-                    border: const OutlineInputBorder(),
-                    errorText: _errorText),
-              ),
+      valueListenable: controller,
+      builder: (context, value, _) {
+        return Flexible(
+          child: Container(
+            margin: const EdgeInsets.all(10),
+            child: TextField(
+              controller: controller,
+              decoration: _addressFieldDecoration,
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -121,7 +121,14 @@ class AddressController extends ChangeNotifier {
   /// When the form changes, the function passes the current `AddressModel` as an argument and gives the possibility to manipulate and return a `AddressModel`.
   final FutureOr<AddressModel> Function(AddressModel)? onAutoComplete;
 
-  AddressController({this.initialValue, this.onAutoComplete}) {
+  AddressController(
+      {this.initialValue,
+      this.onAutoComplete,
+      required this.zipCodeValidator,
+      required this.housenumberValidator,
+      required this.suffixValidator,
+      required this.streetValidator,
+      required this.cityValidator}) {
     _model = initialValue ??
         const AddressModel(
           zipcode: null,
@@ -140,6 +147,12 @@ class AddressController extends ChangeNotifier {
 
   late AddressModel _model;
 
+  final String? Function(String) zipCodeValidator;
+  final String? Function(String) housenumberValidator;
+  final String? Function(String) suffixValidator;
+  final String? Function(String) streetValidator;
+  final String? Function(String) cityValidator;
+
   late final _zipcodeController =
       TextEditingController(text: initialValue?.zipcode);
   late final _streetController =
@@ -151,6 +164,20 @@ class AddressController extends ChangeNotifier {
   late final _cityController = TextEditingController(text: initialValue?.city);
 
   AddressModel get model => _model;
+
+  bool get validate => _validate();
+
+  bool _validate() {
+    if (zipCodeValidator.call(_zipcodeController.text) == null &&
+        streetValidator.call(_streetController.text) == null &&
+        housenumberValidator.call(_housenumberController.text) == null &&
+        suffixValidator.call(_suffixController.text) == null &&
+        cityValidator.call(_cityController.text) == null) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   void _update() async {
     AddressModel updatedModel = _model.copyWith(
